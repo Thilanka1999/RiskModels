@@ -1,0 +1,13 @@
+with initial features logistic regression performence are looklike below
+accuracy: 0.7774509803921569
+Precision: 0.6795629441641118
+Recall: 0.7774509803921569
+f1_score: 0.6865985125883345
+
+after doing some feature engineering and by selecting most importance feature
+by using feature.importance method. logistic regression gives 
+following results. with most relevant 40% features.
+accuracy: 0.8066274509803921
+Precision: 0.7828811240556828
+Recall: 0.8066274509803921
+f1_score: 0.7752794645408548
