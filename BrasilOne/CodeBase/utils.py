@@ -1,5 +1,19 @@
 import pandas as pd
+import numpy as np
 def feature_engineering(df):
+    df['last_amount_borrowed'] = np.log1p(df['last_amount_borrowed'])
+    df['last_borrowed_in_months'] = np.log1p(df['last_borrowed_in_months'])
+    df['credit_limit'] = np.log1p(df['credit_limit'])
+    df['income'] = np.log1p(df['income'])
+    df['ok_since'] = np.log1p(df['ok_since'])
+    df['n_bankruptcies'] = np.log1p(df['n_bankruptcies'])
+
+    df['n_defaulted_loans'] = np.log1p(df['n_defaulted_loans'])
+    df['n_accounts'] = np.log1p(df['n_accounts'])
+    df['n_issues'] = np.log1p(df['n_issues'])
+    df['reported_income'] = np.log1p(df['reported_income'])
+
+
     df['score_4_minus_score_3'] = df['score_4'] - df['score_3']
     df['avg_score_5_6'] = (df['score_5'] + df['score_6']) / 2
 
@@ -18,7 +32,7 @@ def feature_engineering(df):
     # df['state_default_rate'] = df['state'].map(state_default_rates)
 
     # 6. Facebook Profile Interactions (Example - combining with another feature)
-    # df['facebook_profile_times_income'] = df['facebook_profile'] * df['income']
+    df['facebook_profile_times_income'] = df['facebook_profile'] * df['income']
 
     df['fraud_score_bin'] = pd.cut(df['external_data_provider_fraud_score'], bins=[0, 700, 800, 900, 1000], labels=[0, 1, 2, 3], right = False)
     # df['facebook_income_credit'] = df['facebook_profile'] * df['income'] * df['credit_limit']
@@ -41,8 +55,8 @@ def feature_engineering(df):
 def additional_feature_engineering(df):
     # 1. Interaction Features
     df['score_1_x_score_2'] = df['score_1'] * df['score_2']
-    df['score_1_x_facebook_profile'] = df['score_1'] * df['facebook_profile']
-    df['score_2_x_facebook_profile'] = df['score_2'] * df['facebook_profile']
+    # df['score_1_x_facebook_profile'] = df['score_1'] * df['facebook_profile']
+    # df['score_2_x_facebook_profile'] = df['score_2'] * df['facebook_profile']
     df['fraud_score_bin_x_score_1'] = df['fraud_score_bin'].astype(int) * df['score_1']
     df['fraud_score_bin_x_score_2'] = df['fraud_score_bin'].astype(int) * df['score_2']
 
@@ -61,25 +75,25 @@ def additional_feature_engineering(df):
 
     # 3. Ratio Features
     df['score_1_div_score_2'] = df['score_1'] / (df['score_2'] + 1e-9)
-    df['facebook_profile_div_score_1'] = df['facebook_profile'] / (df['score_1'] + 1e-9)
-    df['facebook_profile_div_score_2'] = df['facebook_profile'] / (df['score_2'] + 1e-9)
+    # df['facebook_profile_div_score_1'] = df['facebook_profile'] / (df['score_1'] + 1e-9)
+    # df['facebook_profile_div_score_2'] = df['facebook_profile'] / (df['score_2'] + 1e-9)
 
     # 4. Difference Features
     df['score_1_minus_score_2'] = df['score_1'] - df['score_2']
-    df['facebook_profile_minus_score_1'] = df['facebook_profile'] - df['score_1']
-    df['facebook_profile_minus_score_2'] = df['facebook_profile'] - df['score_2']
+    # df['facebook_profile_minus_score_1'] = df['facebook_profile'] - df['score_1']
+    # df['facebook_profile_minus_score_2'] = df['facebook_profile'] - df['score_2']
 
     # 5. Binning and Encoding Interactions
-    df['score_1_bin'] = pd.cut(df['score_1'], bins=[0, 500, 700, 900, 1000], labels=[0, 1, 2, 3], right=False).astype(int)
-    df['score_2_bin'] = pd.cut(df['score_2'], bins=[0, 500, 700, 900, 1000], labels=[0, 1, 2, 3], right=False).astype(int)
+    # df['score_1_bin'] = pd.cut(df['score_1'], bins=[0, 500, 700, 900, 1000], labels=[0, 1, 2, 3], right=False).astype(int)
+    # df['score_2_bin'] = pd.cut(df['score_2'], bins=[0, 500, 700, 900, 1000], labels=[0, 1, 2, 3], right=False).astype(int)
 
-    df['score_1_bin_x_score_2_bin'] = df['score_1_bin'] * df['score_2_bin']
-    df['score_1_bin_x_fraud_score_bin'] = df['score_1_bin'] * df['fraud_score_bin'].astype(int)
-    df['score_2_bin_x_fraud_score_bin'] = df['score_2_bin'] * df['fraud_score_bin'].astype(int)
+    # df['score_1_bin_x_score_2_bin'] = df['score_1_bin'] * df['score_2_bin']
+    # df['score_1_bin_x_fraud_score_bin'] = df['score_1_bin'] * df['fraud_score_bin'].astype(int)
+    # df['score_2_bin_x_fraud_score_bin'] = df['score_2_bin'] * df['fraud_score_bin'].astype(int)
 
     # 6. State-based Features
-    df['state_x_real_state'] = df['state'].astype(str) + "_" + df['real_state'].astype(str)
-    df['state_x_shipping_state'] = df['state'].astype(str) + "_" + df['shipping_state'].astype(str)
+    df['state_x_real_state'] = df['state'].astype(int) * df['real_state'].astype(int)
+    df['state_x_shipping_state'] = df['state'].astype(int) * df['shipping_state'].astype(int)
 
     state_real_state_avg_score_1 = df.groupby('state_x_real_state')['score_1'].mean().to_dict()
     df['state_real_state_avg_score_1'] = df['state_x_real_state'].map(state_real_state_avg_score_1)
@@ -90,7 +104,7 @@ def additional_feature_engineering(df):
     # 7. Polynomial Features
     df['score_1_sq'] = df['score_1']**2
     df['score_2_sq'] = df['score_2']**2
-    df['facebook_profile_sq'] = df['facebook_profile']**2
+    # df['facebook_profile_sq'] = df['facebook_profile']**2
 
     return df
 
@@ -100,9 +114,11 @@ def inference_validator(user_input):
     'score_3', 'score_4', 'score_5', 'score_6', 'risk_rate', 'last_amount_borrowed',
     'last_borrowed_in_months', 'credit_limit', 'income', 'ok_since', 'n_bankruptcies',
     'n_defaulted_loans', 'n_accounts', 'n_issues',
-    'external_data_provider_credit_checks_last_year', 'external_data_provider_credit_checks_last_month',
+    'external_data_provider_credit_checks_last_month',
+    'facebook_profile',
+    'external_data_provider_credit_checks_last_year',
     'external_data_provider_email_seen_before', 'reported_income', 'application_time_in_funnel',
-    'external_data_provider_fraud_score', 'shipping_state', 'facebook_profile', 'state', 'score_1', 'score_2'
+    'external_data_provider_fraud_score', 'shipping_state', 'state', 'score_1', 'score_2'
     ]      
 
     for col in required_columns:
