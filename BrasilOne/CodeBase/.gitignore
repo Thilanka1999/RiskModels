@@ -1,0 +1,47 @@
+/saved
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+venv/
+ENV/
+.env
+build/
+dist/
+*.egg-info/
+*.egg
+*.whl
+
+# PyInstaller
+#  Usually these files are written to the dist/ directory, but if we are
+#  building extensions in-place, ignore them.
+*.manifest
+*.spec
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environments (if you use virtual environments)
+.venv/
+venv/
+env/
+ENV/
+
+# OS generated files #
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Temp files
+*.tmp
+*.swp
+*.bak
