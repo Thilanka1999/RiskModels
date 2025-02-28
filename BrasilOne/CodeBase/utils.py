@@ -1,82 +1,57 @@
 import pandas as pd
 import numpy as np
+
 def feature_engineering(df):
-    df['last_amount_borrowed_log'] = np.sqrt(df['last_amount_borrowed'])
-    df['last_borrowed_in_months_log'] = np.sqrt(df['last_borrowed_in_months'])
-    df['credit_limit_log'] = np.sqrt(df['credit_limit'])
-    df['income_log'] = np.sqrt(df['income'])
-    df['ok_since_log'] = np.sqrt(df['ok_since'])
+    temp = pd.DataFrame({'date': pd.to_datetime(df['ApplicationDate'])})
+    df['ApplicationDate'] = temp['date'].dt.strftime('%j').astype(int)  
 
-    df['n_accounts_log'] = np.sqrt(df['n_accounts'])
-    df['n_issues_log'] = np.sqrt(df['n_issues'])
-    df['reported_income_log'] = np.sqrt(df['reported_income'])
+    df['IncomeToDebtRatio'] = df['MonthlyIncome'] / (df['MonthlyDebtPayments'] + 1e-6)
+    df['SavingsToIncomeRatio'] = df['SavingsAccountBalance'] / (df['MonthlyIncome'] + 1e-6)
+    df['NetWorthToIncomeRatio'] = df['NetWorth'] / (df['MonthlyIncome'] + 1e-6)
+    df['HighCreditUtilization'] = (df['CreditCardUtilizationRate'] > 0.7).astype(int)
+    # df['LoanToIncomeRatio'] = df['LoanAmount'] / (df['MonthlyIncome'] + 1e-6)
+    df['HighDebtToIncome'] = (df['TotalDebtToIncomeRatio'] > 0.3).astype(int)
+    # df['CreditAge'] = df['LengthOfCreditHistory'] / 12
+    # df['AssetsToLiabilitiesRatio'] = df['TotalAssets'] / (df['TotalLiabilities'] + 1e-6)
+    df['JobStability'] = df['JobTenure'] / (df['Age'] - 18 + 1e-6)
+    df['PreviousLoanDefaultRate'] = df['PreviousLoanDefaults'] / (df['LengthOfCreditHistory'] + 1e-6)
+    # df['PaymentHistoryRatio'] = df['PaymentHistory'] / (df['LengthOfCreditHistory'] + 1e-6)
+    df['UtilityBillsPaymentHistoryRatio'] = df['UtilityBillsPaymentHistory'] / (df['LengthOfCreditHistory'] + 1e-6)
+    df['InterestRateSpread'] = df['InterestRate'] - df['BaseInterestRate']
+    # df['MonthlyLoanPaymentToIncomeRatio'] = df['MonthlyLoanPayment'] / (df['MonthlyIncome'] + 1e-6)
+    df['AgeExperienceInteraction'] = df['Age'] * df['Experience']
+    # df['CreditScoreDebtToIncomeInteraction'] = df['CreditScore'] * df['DebtToIncomeRatio']
+    df['LogMonthlyIncome'] = np.log1p(df['MonthlyIncome'])
+    # df['LogLoanAmount'] = np.log1p(df['LoanAmount'])
+    df['LogSavingsAccountBalance'] = np.log1p(df['SavingsAccountBalance'])
+    df['AgeBin'] = pd.cut(df['Age'], bins=[0, 30, 40, 50, 60, 100], labels=['0-30', '30-40', '40-50', '50-60', '60+'])
+    df['CreditScoreBin'] = pd.cut(df['CreditScore'], bins=[340, 550, 600, 650, 750], labels=['Poor', 'Fair', 'Good', 'Excellent'])
+    # df['CreditScoreSquared'] = df['CreditScore'] ** 2
+    # df['DebtToIncomeRatioSquared'] = df['DebtToIncomeRatio'] ** 2
+    # df['TotalCreditLinesAndInquiries'] = df['NumberOfOpenCreditLines'] + df['NumberOfCreditInquiries']
+    df["RiskScore"] = df["RiskScore"].astype(int)
 
-
-    df['credit_utilization'] = df['last_amount_borrowed'] / (df['credit_limit'] + 1e-9) # Add small constant
-    df['credit_utilization'] = np.sqrt(df['credit_utilization'])
-
-    
-    df['reported_income_div_income'] = df['reported_income'] / (df['income'] + 1e-9) # Add small constant
-    df['reported_income_div_income'] = np.sqrt(df['reported_income_div_income'])
-
-    df['facebook_profile_times_income'] = df['facebook_profile'] * df['income']
-    df['facebook_profile_times_income'] = np.sqrt(df['facebook_profile_times_income'])
-
-
-    df['credit_available'] = df['credit_limit'] - df['last_amount_borrowed'] # Available credit
-    # df['credit_available'] = np.sqrt(df['credit_available'])
-
-    df['income_per_account'] = df['income'] / (df['n_accounts'] + 1e-9) # Income per account
-    df['income_per_account'] = np.sqrt(df['income_per_account'])
-
-    df['loan_amount_to_income'] = df['last_amount_borrowed'] / (df['income'] + 1e-9)
-    df['loan_amount_to_income'] = np.sqrt(df['loan_amount_to_income'])
-
-    df['n_accounts_to_credit_limit'] = df['n_accounts'] / (df['credit_limit'] + 1e-9)
-    df['n_accounts_to_credit_limit'] = np.sqrt(df['n_accounts_to_credit_limit'])
-
-
-    # 8. Interactions between existing engineered features
-    # df['debt_to_income_x_default_rate'] = df['debt_to_income'] * df['default_rate']
-    df['credit_utilization_x_fraud_score'] = df['credit_utilization'] * df['external_data_provider_fraud_score']
-
-
-    return df
-
-
-def additional_feature_engineering(df):
-
-    real_state_avg_facebook_profile = df.groupby('real_state')['facebook_profile'].mean().to_dict()
-    df['real_state_avg_facebook_profile'] = df['real_state'].map(real_state_avg_facebook_profile)
-
-    shipping_state_avg_facebook_profile = df.groupby('shipping_state')['facebook_profile'].mean().to_dict()
-    df['shipping_state_avg_facebook_profile'] = df['shipping_state'].map(shipping_state_avg_facebook_profile)
-
-
-    # 6. State-based Features
-    df['state_x_real_state'] = df['state'].astype(int) * df['real_state'].astype(int)
-    df['state_x_shipping_state'] = df['state'].astype(int) * df['shipping_state'].astype(int)
-
-    state_real_state_avg_score_1 = df.groupby('state_x_real_state')['score_1'].mean().to_dict()
-    df['state_real_state_avg_score_1'] = df['state_x_real_state'].map(state_real_state_avg_score_1)
-
-    # state_shipping_state_avg_score_2 = df.groupby('state_x_shipping_state')['score_2'].mean().to_dict()
-    # df['state_shipping_state_avg_score_2'] = df['state_x_shipping_state'].map(state_shipping_state_avg_score_2)
+    df = pd.get_dummies(df, columns=['HighDebtToIncome', 'AgeBin', 'CreditScoreBin', 'EmploymentStatus', 'MaritalStatus', 'HomeOwnershipStatus', 'EducationLevel', 'LoanPurpose'], drop_first=True)
+    # df = df.drop(columns=['AgeBin', 'CreditScoreBin', 'EmploymentStatus', 'MaritalStatus', 'HomeOwnershipStatus', 'EducationLevel', 'LoanPurpose'])
+    df = df.drop(columns=['MonthlyIncome', 'SavingsAccountBalance', 'AnnualIncome', 'Age', 'Experience', 'InterestRate', 'NetWorth'])
 
     return df
 
 
 def inference_validator(user_input):
-    required_columns = [
-    'score_3', 'score_4', 'score_5', 'score_6', 'risk_rate', 'last_amount_borrowed',
-    'last_borrowed_in_months', 'credit_limit', 'income', 'ok_since',
-    'n_accounts', 'n_issues',
-    'external_data_provider_credit_checks_last_month',
-    'facebook_profile',
-    'external_data_provider_credit_checks_last_year',
-    'external_data_provider_email_seen_before', 'reported_income', 'application_time_in_funnel',
-    'external_data_provider_fraud_score', 'shipping_state', 'state', 'score_1'
-    ]      
+    required_columns = ['ApplicationDate', 'Age', 'CreditScore',
+       'EmploymentStatus', 'EducationLevel', 'LoanAmount',
+       'LoanDuration', 'MaritalStatus', 'NumberOfDependents',
+       'HomeOwnershipStatus', 'MonthlyDebtPayments', "Experience",
+       'CreditCardUtilizationRate', 'NumberOfOpenCreditLines',
+       'NumberOfCreditInquiries', 'DebtToIncomeRatio', 'BankruptcyHistory',
+       'LoanPurpose', 'PreviousLoanDefaults', 'PaymentHistory',
+       'LengthOfCreditHistory', 'SavingsAccountBalance',
+       'CheckingAccountBalance', 'TotalAssets', 'TotalLiabilities',
+       'MonthlyIncome', 'UtilityBillsPaymentHistory', 'JobTenure', 'NetWorth',
+       'BaseInterestRate', 'InterestRate', 'MonthlyLoanPayment',
+       'TotalDebtToIncomeRatio', 'LoanApproved', 'RiskScore'
+    ]
 
     for col in required_columns:
         if col not in user_input:
