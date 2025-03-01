@@ -10,7 +10,7 @@ def feature_engineering(df):
     df['NetWorthToIncomeRatio'] = df['NetWorth'] / (df['MonthlyIncome'] + 1e-6)
     df['HighCreditUtilization'] = (df['CreditCardUtilizationRate'] > 0.7).astype(int)
     # df['LoanToIncomeRatio'] = df['LoanAmount'] / (df['MonthlyIncome'] + 1e-6)
-    df['HighDebtToIncome'] = (df['TotalDebtToIncomeRatio'] > 0.3).astype(int)
+    df['HighDebtToIncome'] = df['TotalDebtToIncomeRatio'] > 0.3
     # df['CreditAge'] = df['LengthOfCreditHistory'] / 12
     # df['AssetsToLiabilitiesRatio'] = df['TotalAssets'] / (df['TotalLiabilities'] + 1e-6)
     df['JobStability'] = df['JobTenure'] / (df['Age'] - 18 + 1e-6)
@@ -21,19 +21,19 @@ def feature_engineering(df):
     # df['MonthlyLoanPaymentToIncomeRatio'] = df['MonthlyLoanPayment'] / (df['MonthlyIncome'] + 1e-6)
     df['AgeExperienceInteraction'] = df['Age'] * df['Experience']
     # df['CreditScoreDebtToIncomeInteraction'] = df['CreditScore'] * df['DebtToIncomeRatio']
-    df['LogMonthlyIncome'] = np.log1p(df['MonthlyIncome'])
+    df['LogMonthlyIncome'] = np.sqrt(df['MonthlyIncome'])
     # df['LogLoanAmount'] = np.log1p(df['LoanAmount'])
-    df['LogSavingsAccountBalance'] = np.log1p(df['SavingsAccountBalance'])
+    df['LogSavingsAccountBalance'] = np.sqrt(df['SavingsAccountBalance'])
     df['AgeBin'] = pd.cut(df['Age'], bins=[0, 30, 40, 50, 60, 100], labels=['0-30', '30-40', '40-50', '50-60', '60+'])
-    df['CreditScoreBin'] = pd.cut(df['CreditScore'], bins=[340, 550, 600, 650, 750], labels=['Poor', 'Fair', 'Good', 'Excellent'])
+    df['CreditScoreBin'] = pd.cut(df['CreditScore'], bins=[340, 500, 650, 1000], labels=['Poor', 'Fair', 'Good'])
     # df['CreditScoreSquared'] = df['CreditScore'] ** 2
     # df['DebtToIncomeRatioSquared'] = df['DebtToIncomeRatio'] ** 2
     # df['TotalCreditLinesAndInquiries'] = df['NumberOfOpenCreditLines'] + df['NumberOfCreditInquiries']
     df["RiskScore"] = df["RiskScore"].astype(int)
 
-    df = pd.get_dummies(df, columns=['HighDebtToIncome', 'AgeBin', 'CreditScoreBin', 'EmploymentStatus', 'MaritalStatus', 'HomeOwnershipStatus', 'EducationLevel', 'LoanPurpose'], drop_first=True)
+    # df = pd.get_dummies(df, dtype=int, columns=['HighDebtToIncome', 'AgeBin', 'CreditScoreBin', 'EmploymentStatus', 'MaritalStatus', 'HomeOwnershipStatus', 'EducationLevel', 'LoanPurpose'], drop_first=True)
     # df = df.drop(columns=['AgeBin', 'CreditScoreBin', 'EmploymentStatus', 'MaritalStatus', 'HomeOwnershipStatus', 'EducationLevel', 'LoanPurpose'])
-    df = df.drop(columns=['MonthlyIncome', 'SavingsAccountBalance', 'AnnualIncome', 'Age', 'Experience', 'InterestRate', 'NetWorth'])
+    df = df.drop(columns=['SavingsAccountBalance', 'AnnualIncome', 'Age',  'InterestRate', 'NetWorth'])
 
     return df
 
@@ -50,7 +50,7 @@ def inference_validator(user_input):
        'CheckingAccountBalance', 'TotalAssets', 'TotalLiabilities',
        'MonthlyIncome', 'UtilityBillsPaymentHistory', 'JobTenure', 'NetWorth',
        'BaseInterestRate', 'InterestRate', 'MonthlyLoanPayment',
-       'TotalDebtToIncomeRatio', 'LoanApproved', 'RiskScore'
+       'TotalDebtToIncomeRatio'
     ]
 
     for col in required_columns:
