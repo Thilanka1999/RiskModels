@@ -25,7 +25,7 @@ def feature_engineering(df):
     # df['LogLoanAmount'] = np.log1p(df['LoanAmount'])
     df['LogSavingsAccountBalance'] = np.sqrt(df['SavingsAccountBalance'])
     df['AgeBin'] = pd.cut(df['Age'], bins=[0, 30, 40, 50, 60, 100], labels=['0-30', '30-40', '40-50', '50-60', '60+'])
-    df['CreditScoreBin'] = pd.cut(df['CreditScore'], bins=[340, 500, 650, 1000], labels=['Poor', 'Fair', 'Good'])
+    df['CreditScoreBin'] = pd.cut(df['CreditScore'], bins=[0, 500, 650, 1000], labels=['Poor', 'Fair', 'Good'])
     # df['CreditScoreSquared'] = df['CreditScore'] ** 2
     # df['DebtToIncomeRatioSquared'] = df['DebtToIncomeRatio'] ** 2
     # df['TotalCreditLinesAndInquiries'] = df['NumberOfOpenCreditLines'] + df['NumberOfCreditInquiries']
