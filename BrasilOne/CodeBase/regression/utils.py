@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.ensemble import IsolationForest
 
 def feature_engineering(df):
     temp = pd.DataFrame({'date': pd.to_datetime(df['ApplicationDate'])})
@@ -31,9 +33,21 @@ def feature_engineering(df):
     # df['TotalCreditLinesAndInquiries'] = df['NumberOfOpenCreditLines'] + df['NumberOfCreditInquiries']
     # df["RiskScore"] = df["RiskScore"].astype(int)
 
-    # df = pd.get_dummies(df, dtype=int, columns=['HighDebtToIncome', 'AgeBin', 'CreditScoreBin', 'EmploymentStatus', 'MaritalStatus', 'HomeOwnershipStatus', 'EducationLevel', 'LoanPurpose'], drop_first=True)
-    # df = df.drop(columns=['AgeBin', 'CreditScoreBin', 'EmploymentStatus', 'MaritalStatus', 'HomeOwnershipStatus', 'EducationLevel', 'LoanPurpose'])
-    # df = df.drop(columns=['SavingsAccountBalance', 'AnnualIncome', 'Age',  'InterestRate', 'NetWorth'])
+
+    # 2. Behavioral Features (assuming time-series data is available)
+    df['DebtStability'] = df['MonthlyIncome'].rolling(window=3, min_periods=1).std()
+    df['SavingConsistency'] = df['SavingsAccountBalance'].rolling(window=3, min_periods=1).mean()
+    # df['CreditUtilizationTrend'] = df['CreditCardUtilizationRate'].diff()
+
+    # 4. Anomaly Detection-Based Features
+    iso_forest = IsolationForest(n_estimators=100, contamination=0.05, random_state=42)
+    df['AnomalyScore_Spending'] = iso_forest.fit_predict(df[['MonthlyIncome']])
+    df['AnomalyScore_CreditUtilization'] = iso_forest.fit_predict(df[['CreditCardUtilizationRate']])
+
+    # 5. Temporal Features (assuming time-series data is available)
+    df['PastLoanDefaultRate_6M'] = df['PreviousLoanDefaults'].rolling(window=6, min_periods=1).mean()
+    df['CreditUtilizationVolatility'] = df['CreditCardUtilizationRate'].rolling(window=3, min_periods=1).std()
+    # df['IncomeGrowthRate'] = df['MonthlyIncome'].pct_change().fillna(0)
 
     return df
 
